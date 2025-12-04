@@ -7,19 +7,9 @@ This repository contains scripts to fine-tune the Spark-TTS model on the LJSpeec
 ```
 spark-tts-ljspeech/
 │
-├── data/
-│   └── LJSpeech-1.1/
-│
-├── models/
-│   └── spark-tts-ljspeech/
-│
-├── outputs/
-│   └── generated_speech.wav
-│
-├── src/
-│   ├── preprocess_data.py
-│   ├── train.py
-│   └── synthesize.py
+├── preprocess_data.py
+├── train.py
+├──synthesize.py
 │
 ├── requirements.txt
 └── README.md
@@ -29,8 +19,8 @@ spark-tts-ljspeech/
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repo-url>
-    cd spark-tts-ljspeech
+    git clone https://github.com/freds0/Spark-TTS_Unsloth_Finetuning
+    cd Spark-TTS_Unsloth_Finetuning
     ```
 
 2.  **Install dependencies:**
@@ -50,14 +40,12 @@ First, you need to download and preprocess the LJSpeech dataset.
 python src/preprocess_data.py
 ```
 
-This script will download the dataset from Hugging Face Hub and save the processed version in the `data/LJSpeech-1.1-processed` directory.
-
 ### 2. Training
 
 To fine-tune the Spark-TTS model, run the training script:
 
 ```bash
-python src/train.py
+python train.py
 ```
 
 This will:
@@ -70,7 +58,7 @@ This will:
 After training, you can generate speech from text using the `synthesize.py` script.
 
 ```bash
-python src/synthesize.py
+python synthesize.py
 ```
 
 The script will load your fine-tuned model and generate an audio file `outputs/generated_speech.wav` from the sample text inside the script. You can modify the `text_to_synthesize` variable in `synthesize.py` to generate different sentences.
