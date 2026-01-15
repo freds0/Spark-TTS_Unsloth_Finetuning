@@ -43,8 +43,8 @@ spark-tts-ljspeech/
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
-   cd spark-tts-ljspeech
+   git clone [<your-repo-url>](https://github.com/freds0/Spark-TTS_Unsloth_Finetuning)
+   cd Spark-TTS_Unsloth_Finetuning
    ```
 
 2. **Install dependencies:**
