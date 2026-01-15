@@ -1,0 +1,200 @@
+# Configuration for Spark-TTS Fine-tuning
+
+# ==============================================================================
+# DATA CONFIGURATION
+# ==============================================================================
+data:
+
+  # Dataset name for special handling (e.g., "ljspeech" or "default")
+  dataset_name: "ljspeech"
+
+  # Path to local dataset (must contain metadata.csv)
+  local_dataset_path: "/root/DATASETS/LJSpeech-1.1/"
+
+  # Directory where the preprocessed dataset will be saved
+  preprocessed_dataset_path: "data/preprocessed_dataset"
+
+  # Expected format of metadata.csv
+  metadata:
+    separator: "|"
+    header: 0  # 0 if header exists, null if not
+    columns:
+      audio_file: "audio_file"
+      text: "text"
+      speaker_name: "speaker_name"
+
+  # Audio configurations
+  audio:
+    target_sampling_rate: 16000
+    volume_normalize: true
+
+# ==============================================================================
+# MODEL CONFIGURATION
+# ==============================================================================
+model:
+  # Base path of the Spark-TTS model
+  base_model_path: "models/Spark-TTS-0.5B"
+
+  # Path of the Language Model (LLM)
+  llm_path: "models/Spark-TTS-0.5B/LLM"
+
+  # Checkpoint path to resume training (null to start from scratch)
+  checkpoint_path: null  # Ex: "./outputs/checkpoint-1500/"
+
+  # Download model from Hugging Face Hub if it doesn't exist
+  download_if_missing: true
+  huggingface_model_id: "unsloth/Spark-TTS-0.5B"
+  max_workers: 8  # Download threads
+
+  # Model configurations
+  max_seq_length: 2048
+  dtype: "float32"  # float32, bfloat16, float16
+  load_in_4bit: false
+  full_finetuning: true
+
+# ==============================================================================
+# LORA CONFIGURATION
+# ==============================================================================
+lora:
+  enabled: true
+  r: 128  # LoRA rank (8, 16, 32, 64, 128)
+  lora_alpha: 128
+  lora_dropout: 0
+  bias: "none"
+  use_gradient_checkpointing: "unsloth"  # true, false, or "unsloth"
+  random_state: 3407
+  use_rslora: false
+  loftq_config: null
+
+  # Target modules for LoRA
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# ==============================================================================
+# TRAINING CONFIGURATION
+# ==============================================================================
+training:
+  # Output directory
+  output_dir: "outputs"
+  final_checkpoint_dir: "output/final_checkpoint"
+
+  # Training hyperparameters
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 4
+  warmup_steps: 10
+
+  # Number of epochs OR number of steps (use only one)
+  num_train_epochs: null  # null or number (e.g., 5)
+  max_steps: 30  # null or number
+
+  learning_rate: 0.0002  # 2e-4
+  weight_decay: 0.01
+  lr_scheduler_type: "linear"
+
+  # Optimizer
+  optim: "adamw_8bit"
+
+  # Precision
+  fp16: auto  # auto, true, false (auto detects BF16 support)
+  bf16: auto  # auto, true, false
+
+  # Logging and monitoring
+  logging_steps: 1
+  report_to: "none"  # "none", "wandb", "tensorboard", etc.
+
+  # Dataset settings
+  dataset_text_field: "text"
+  packing: false
+  remove_columns:
+    - "audio"
+
+  # Seed for reproducibility
+  seed: 3407
+
+# ==============================================================================
+# AUDIO TOKENIZER CONFIGURATION
+# ==============================================================================
+audio_tokenizer:
+  # Processing device (cuda, cpu)
+  device: "cuda"
+
+  # Wav2Vec2 feature extraction
+  wav2vec2:
+    sampling_rate: 16000
+    padding: true
+    hidden_state_layers: [11, 14, 16]  # Layers for feature mixing
+
+  # Token formatting
+  token_format:
+    task_token: "<|task_tts|>"
+    start_content: "<|start_content|>"
+    end_content: "<|end_content|>"
+    start_global_token: "<|start_global_token|>"
+    end_global_token: "<|end_global_token|>"
+    start_semantic_token: "<|start_semantic_token|>"
+    end_semantic_token: "<|end_semantic_token|>"
+    end_sequence: "<|im_end|>"
+    global_token_template: "<|bicodec_global_{id}|>"
+    semantic_token_template: "<|bicodec_semantic_{id}|>"
+
+  # Include source in text (if available in dataset)
+  include_source: false
+
+# ==============================================================================
+# SYNTHESIS CONFIGURATION (INFERENCE)
+# ==============================================================================
+synthesis:
+  # Paths
+  model_path: "models/checkpoint-1500"
+  audio_tokenizer_path: "models/Spark-TTS-0.5B"
+  output_dir: "outputs/synthesis_batch"
+
+  # Input file (one text per line)
+  input_file: null  # Must be specified via CLI or here
+
+  # Generation parameters
+  generation:
+    max_new_tokens: 2048
+    do_sample: true
+    temperature: 0.8
+    top_k: 50
+    top_p: 1.0
+
+  # Batch settings
+  batch_size: 4
+
+  # Model
+  max_seq_length: 128
+  dtype: "float32"
+  load_in_4bit: false
+
+  # Output audio
+  output_format: "wav"
+  sample_rate: 16000
+
+  # Skip existing files
+  skip_existing: true
+
+# ==============================================================================
+# SYSTEM CONFIGURATION
+# ==============================================================================
+system:
+  # Clear CUDA cache after tokenization
+  clear_cuda_cache: true
+
+  # Move models to CPU after use (save GPU)
+  move_to_cpu_after_tokenization: true
+
+  # Check if necessary folders/files exist
+  check_paths: true
+
+  # Auto clone Spark-TTS repository
+  auto_clone_sparktts: true
+  sparktts_repo_url: "https://github.com/SparkAudio/Spark-TTS"
+  sparktts_path: "Spark-TTS"

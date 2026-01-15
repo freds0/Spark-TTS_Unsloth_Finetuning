@@ -1,0 +1,145 @@
+# Test Configuration - Spark-TTS Fine-tuning
+
+# ==============================================================================
+# DATA CONFIGURATION
+# ==============================================================================
+data:
+  # Dataset name for special handling (e.g., "ljspeech" or "default")
+  dataset_name: "default"
+
+  # Path to local dataset (must contain metadata.csv)
+  local_dataset_path: "/home/ubuntu/fred-experiments/jordan_ibrahim_synth_11labs_v20250923/"
+
+  # Directory where the preprocessed dataset will be saved
+  preprocessed_dataset_path: "data/preprocessed_dataset"
+
+  # Expected format of metadata.csv
+  metadata:
+    separator: "|"
+    header: 0
+    columns:
+      audio_file: "audio_file"
+      text: "text"
+      speaker_name: "speaker_name"
+
+  # Audio configurations
+  audio:
+    target_sampling_rate: 16000
+    volume_normalize: true
+
+# ==============================================================================
+# MODEL CONFIGURATION
+# ==============================================================================
+model:
+  base_model_path: "models/Spark-TTS-0.5B"
+  llm_path: "models/Spark-TTS-0.5B/LLM"
+  checkpoint_path: null
+  download_if_missing: false
+  huggingface_model_id: "unsloth/Spark-TTS-0.5B"
+  max_workers: 8
+  max_seq_length: 2048
+  dtype: "float32"
+  load_in_4bit: false
+  full_finetuning: true
+
+# ==============================================================================
+# LORA CONFIGURATION
+# ==============================================================================
+lora:
+  enabled: true
+  r: 128
+  lora_alpha: 128
+  lora_dropout: 0
+  bias: "none"
+  use_gradient_checkpointing: "unsloth"
+  random_state: 3407
+  use_rslora: false
+  loftq_config: null
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# ==============================================================================
+# TRAINING CONFIGURATION
+# ==============================================================================
+training:
+  output_dir: "outputs"
+  final_checkpoint_dir: "output/final_checkpoint"
+  per_device_train_batch_size: 64
+  gradient_accumulation_steps: 4
+  warmup_steps: 10
+  num_train_epochs: 100
+  max_steps: null
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  lr_scheduler_type: "linear"
+  optim: "adamw_8bit"
+  fp16: auto
+  bf16: auto
+  logging_steps: 1
+  report_to: "none"
+  dataset_text_field: "text"
+  packing: false
+  remove_columns:
+    - "audio"
+  seed: 3407
+
+# ==============================================================================
+# AUDIO TOKENIZER CONFIGURATION
+# ==============================================================================
+audio_tokenizer:
+  device: "cpu"
+  wav2vec2:
+    sampling_rate: 16000
+    padding: true
+    hidden_state_layers: [11, 14, 16]
+  token_format:
+    task_token: "<|task_tts|>"
+    start_content: "<|start_content|>"
+    end_content: "<|end_content|>"
+    start_global_token: "<|start_global_token|>"
+    end_global_token: "<|end_global_token|>"
+    start_semantic_token: "<|start_semantic_token|>"
+    end_semantic_token: "<|end_semantic_token|>"
+    end_sequence: "<|im_end|>"
+    global_token_template: "<|bicodec_global_{id}|>"
+    semantic_token_template: "<|bicodec_semantic_{id}|>"
+  include_source: false
+
+# ==============================================================================
+# SYNTHESIS CONFIGURATION (INFERENCE)
+# ==============================================================================
+synthesis:
+  model_path: "outputs/checkpoint-1000"
+  audio_tokenizer_path: "models/Spark-TTS-0.5B"
+  output_dir: "outputs/synthesis"
+  input_file: null
+  generation:
+    max_new_tokens: 2048
+    do_sample: true
+    temperature: 0.8
+    top_k: 50
+    top_p: 1.0
+  batch_size: 4
+  max_seq_length: 128
+  dtype: "float32"
+  load_in_4bit: false
+  output_format: "wav"
+  sample_rate: 16000
+  skip_existing: true
+
+# ==============================================================================
+# SYSTEM CONFIGURATION
+# ==============================================================================
+system:
+  clear_cuda_cache: true
+  move_to_cpu_after_tokenization: true
+  check_paths: false
+  auto_clone_sparktts: false
+  sparktts_repo_url: "https://github.com/SparkAudio/Spark-TTS"
+  sparktts_path: "Spark-TTS"
