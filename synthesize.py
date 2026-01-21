@@ -75,8 +75,11 @@ def synthesize_batch(
     # Process each result in the batch
     for i, predicts_text in enumerate(predicts_texts):
         # Extract Semantic and Global Tokens
-        semantic_pattern = token_format["semantic_token_template"].replace("{id}", r"(\d+)")
-        global_pattern = token_format["global_token_template"].replace("{id}", r"(\d+)")
+        # Escape the pipe characters in the token templates before creating regex
+        semantic_template_escaped = token_format["semantic_token_template"].replace("|", r"\|")
+        global_template_escaped = token_format["global_token_template"].replace("|", r"\|")
+        semantic_pattern = semantic_template_escaped.replace("{id}", r"(\d+)")
+        global_pattern = global_template_escaped.replace("{id}", r"(\d+)")
 
         semantic_matches = re.findall(semantic_pattern, predicts_text)
         global_matches = re.findall(global_pattern, predicts_text)

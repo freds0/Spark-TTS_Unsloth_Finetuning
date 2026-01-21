@@ -15,4 +15,5 @@ protobuf
 omegaconf
 einx
 soxr
-einopspyyaml
+einops
+pyyaml
